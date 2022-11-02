@@ -2,7 +2,7 @@ mod render;
 
 use piston_window::types::Color;
 use piston_window::Key;
-use render::{draw_block, draw_rectange};
+use render::{draw_block};
 use std::collections::LinkedList;
 
 use piston_window::Context;
@@ -11,8 +11,8 @@ use piston_window::G2d;
 use rand::{Rng};
 
 const APPLE_COLOR: Color = [0.90, 0.49, 0.13, 1.0];
-const BORDER_COLOR: Color = [0.741, 0.765, 0.78, 1.0];
-const GAMEOVER_COLOR: Color = [0.91, 0.30, 0.24, 0.5];
+// const BORDER_COLOR: Color = [0.741, 0.765, 0.78, 1.0];
+// const GAMEOVER_COLOR: Color = [0.91, 0.30, 0.24, 0.5];
 const SNAKE_COLOR: Color = [0.18, 0.80, 0.44, 1.0];
 
 const STEP_TIME: f64 = 0.2; // in second
@@ -37,6 +37,7 @@ pub enum GameState {
 pub struct Snake {
     body: LinkedList<Block>,
     prev_dir: Direction,
+    game_size: (i32, i32),
 }
 #[derive(Debug, Clone,PartialEq)]
 pub enum Direction {
@@ -78,7 +79,7 @@ enum Collision {
 
 impl Game {
     pub fn new(width: i32, height: i32) -> Self {
-        let snake = Snake::init_snake(width, height, 3, Direction::Right);
+        let snake = Snake::init_snake((width/2).abs(), (height/2).abs(), 3, Direction::Right, (width, height));
         Game {
             game_size: (width,height),
             apple_loc: Game::generate_random_apple_location((width, height), &snake.body),
@@ -138,6 +139,7 @@ impl Game {
             }
             GameState::AteApple => {
                 self.points += 1;
+                println!("Points: {:?}", self.points);
                 self.snake.grow_snake();
                 self.apple_loc =  Game::generate_random_apple_location(self.game_size, &self.snake.body);
                 self.state = GameState::Moving(self.snake.prev_dir.clone());
@@ -190,12 +192,12 @@ impl Game {
 }
 
 impl Snake {
-    fn new(x: i32, y: i32, size: i32, default_move_dir: Direction) -> Self {
+    fn new(x: i32, y: i32, size: i32, default_move_dir: Direction, game_size: (i32,i32)) -> Self {
         let mut body = LinkedList::new();
         for i in 0..size {
             body.push_back(Block {x: x-i, y });
         }
-        Snake { body, prev_dir: default_move_dir }
+        Snake { body, prev_dir: default_move_dir, game_size }
     }
     pub fn move_snake(&mut self, dir: &Direction) {
         match &dir {
@@ -205,13 +207,43 @@ impl Snake {
             Direction::Right => self.perform_move_snake(1, 0),
         }
     }
-    fn perform_move_snake(&mut self, x: i32, y: i32) {
-        let (head_x, head_y) = self.get_head_pos();
+    fn perform_move_snake(&mut self, x: i32, y: i32) {        
+        let target = self.calculate_next_position(x, y);
         self.body.pop_back();
-        self.body.push_front(Block {
+        self.body.push_front(target);
+    }
+
+    fn calculate_next_position(&self, x: i32, y: i32 ) -> Block {
+        let (head_x, head_y) = self.get_head_pos();
+        let target = Block {
             x: head_x + x,
             y: head_y + y,
-        });
+        };
+        if target.x > self.game_size.0 {
+            return Block {
+                x: 0,
+                y: head_y + y,
+            }
+        }
+        if target.x < 0 {
+            return Block {
+                x: self.game_size.0-1,
+                y: head_y + y,
+            }
+        }
+        if target.y > self.game_size.1 {
+            return Block {
+                x: head_x + x,
+                y: 0,
+            }
+        }
+        if target.y < 0 {
+            return Block {
+                x: head_x + x,
+                y: self.game_size.0 -1,
+            }
+        }
+        target
     }
     fn check_collision(&self, apple_loc: (i32, i32)) -> Collision {
         let mut tmp = self.body.clone();
@@ -243,8 +275,8 @@ impl Snake {
     pub fn get_length(&self) -> usize {
         self.body.len()
     }
-    pub fn init_snake(width :i32, height: i32, size:i32, default_move_dir: Direction) -> Snake {
-        Snake::new((width/2).abs(), (height/2).abs(), size, default_move_dir)
+    pub fn init_snake(x :i32, y: i32, size:i32, default_move_dir: Direction, game_size:(i32,i32)) -> Snake {
+        Snake::new(x,y, size, default_move_dir, game_size)
     }
 
     fn intersects_body(body: &LinkedList<Block>, other: (i32, i32)) -> bool {
@@ -260,7 +292,7 @@ impl Snake {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    // use super::*;
 
     #[test]
     fn it_works() {}

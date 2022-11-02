@@ -24,3 +24,8 @@ Scenario: Cannot move opposite direction of current direction
 Given we have a snake game
 When the snake is moving up and we tap down
 Then the snake moves up
+
+Scenario: Wrapping movement
+Given we have a snake game
+When the snake moves over the edge
+Then the snake appears on the opposite side

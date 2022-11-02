@@ -98,7 +98,7 @@ fn given_snake(s: &mut State) {
     let (w, h) = (20,20);
     s.input = Some(Game::new_constructed(
         (w,h),
-        Snake::init_snake(w,h, 3, Direction::Right),
+        Snake::init_snake((w/2).abs(),(h/2).abs(), 3, Direction::Right, (w,h)),
         GameState::Waiting,
         0.0,
         (w-1, h-1) //place it out of the way
@@ -174,7 +174,7 @@ fn when_hit_self(s: &mut State) {
     let (w,h) = input.get_game_size();
     let mut output = Game::new_constructed(
         (w,h),
-        Snake::init_snake(w,h, 5, Direction::Right),
+        Snake::init_snake((w/2).abs(),(h/2).abs(), 5, Direction::Right, (w,h)),
         input.get_state(),
         0.0,
         input.get_apple_loc() //place it out of the way
@@ -204,9 +204,10 @@ fn when_key_press(s: &mut State, key: CuKey) {
         CuKey::D => piston_window::Key::D,
     };
     let input = s.input.to_owned().unwrap();
+    let (w, h) = input.get_game_size();
     let mut output = Game::new_constructed(
         input.get_game_size(),
-        Snake::init_snake(input.get_game_size().0, input.get_game_size().1, 1, key.into()),
+        Snake::init_snake((w/2).abs(), (h/2).abs(), 1, key.into(), (w,h)),
         GameState::Waiting,
         0.0,
         input.get_apple_loc(),
@@ -261,6 +262,35 @@ fn then_spawn_apple(s: &mut State) {
     let new_apple_loc = output.get_apple_loc();
     assert_ne!(org_apple_loc, new_apple_loc, "Apple location was expected to change, but it did not.");
 } 
+
+#[when(expr = "the snake moves over the edge")]
+fn when_leave_edge(s: &mut State) {
+    let input = s.input.to_owned().unwrap();
+    let (w, h) = input.get_game_size();
+    let mut output = Game::new_constructed(
+        input.get_game_size(),
+        Snake::init_snake(0, (h/2).abs(), 1, Direction::Left, (w,h)), //pass 0 as x to make snake to appear on left-most edge
+        GameState::Waiting,
+        0.0,
+        input.get_apple_loc(),
+        0
+    );
+    output.update_move_dir(Direction::Left);
+    output.update(2.0);
+    s.output = Some(output);
+}
+
+#[then(expr="the snake appears on the opposite side")]
+fn then_appear_opposite_side(s: &mut State) {
+    let input = s.input.to_owned().unwrap();
+    let output = s.output.to_owned().unwrap();
+    let org_pos = input.get_snake().get_head_pos();
+    let new_pos = output.get_snake().get_head_pos();
+    let game_size = input.get_game_size();
+    assert_ne!(org_pos, new_pos, "Position did not change when expected to.");
+    assert!(new_pos.0 > 0, "Position went below zero.");
+    assert_eq!(new_pos.0, game_size.0 -1, "Position is not wrapping around.");
+}
 
 //Points
 #[then(expr = "the points go up by one")]
