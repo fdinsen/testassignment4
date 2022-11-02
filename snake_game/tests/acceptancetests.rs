@@ -32,6 +32,16 @@ impl FromStr for CuKey {
         })
     }
 }
+impl Into<Direction> for CuKey {
+    fn into(self) -> Direction {
+        match self {
+            CuKey::A => Direction::Left,
+            CuKey::D => Direction::Right,
+            CuKey::W => Direction::Up,
+            CuKey::S => Direction::Down,
+        }
+    }
+}
 #[derive(Debug, Default, Parameter, PartialEq)]
 #[param(name="dir", regex="up|down|left|right")]
 enum CuDirection {
@@ -88,7 +98,7 @@ fn given_snake(s: &mut State) {
     let (w, h) = (20,20);
     s.input = Some(Game::new_constructed(
         (w,h),
-        Snake::init_snake(w,h),
+        Snake::init_snake(w,h, 3, Direction::Right),
         GameState::Waiting,
         0.0,
         (w-1, h-1) //place it out of the way
@@ -110,7 +120,18 @@ fn when_free_spot(s: &mut State) {
 }   
 #[when(expr = "the snake moves to a spot with an apple")]
 fn when_eat_apple(s: &mut State) {
-    assert!(false);
+    let input = s.input.to_owned().unwrap();
+    let snake = input.get_snake();
+    let (ax, ay) = snake.get_head_pos();
+    let mut output = Game::new_constructed(
+        input.get_game_size(),
+        snake,
+        GameState::Moving(Direction::Right),
+        0.0,
+        (ax+1, ay)
+    );
+    output.update(2.0);
+    s.output = Some(output);
 }
 
 //Snake Growth
@@ -118,13 +139,14 @@ fn when_eat_apple(s: &mut State) {
 fn then_no_grow(s: &mut State) {
     let input_snake_length = s.input.to_owned().unwrap().get_snake().get_length();
     let output_snake_length = s.output.to_owned().unwrap().get_snake().get_length();
-    assert_eq!(input_snake_length, output_snake_length);
+    assert_eq!(input_snake_length, output_snake_length, "Snake length changed unexpectedly.");
 }
 #[then(expr = "the snake grows by one")]
 fn then_grow(s: &mut State) {
     let input_snake_length = s.input.to_owned().unwrap().get_snake().get_length();
     let output_snake_length = s.output.to_owned().unwrap().get_snake().get_length();
-    assert_ne!(input_snake_length, output_snake_length);
+    assert_ne!(input_snake_length, output_snake_length, "Snake length did not change when expected to.");
+    assert!(input_snake_length < output_snake_length, "Snake length did not grow when expected to.");
 }
 
 //Snake Death
@@ -133,18 +155,34 @@ fn then_no_die(s: &mut State) {
     match s.output.to_owned().unwrap().get_state() {
         GameState::Dead => assert!(false, "Snake died unexpectedly"),
         _ => {
-            assert!(true);
+            assert!(true, "How the hell did this fail!?");
         },
     }
 }
 
 #[when(expr = "the snake moves to a spot that is already occupied by the snake")]
 fn when_hit_self(s: &mut State) {
-    assert!(false);
+    let input = s.input.to_owned().unwrap();
+    let (w,h) = input.get_game_size();
+    let mut output = Game::new_constructed(
+        (w,h),
+        Snake::init_snake(w,h, 5, Direction::Right),
+        input.get_state(),
+        0.0,
+        input.get_apple_loc() //place it out of the way
+    );
+    output.update_move_dir(Direction::Up);
+    output.update(2.0);
+    output.update_move_dir(Direction::Left);
+    output.update(2.0);
+    output.update_move_dir(Direction::Down);
+    output.update(2.0);
+    s.output = Some(output);
 }   
 #[then(expr = "it dies")]
 fn then_die(s: &mut State) {
-    assert!(false);   
+    let output = s.output.to_owned().unwrap();
+    assert_eq!(GameState::Dead, output.get_state(), "Snake did not die when expected to.");  
 }
 
 //Movement
@@ -156,7 +194,14 @@ fn when_key_press(s: &mut State, key: CuKey) {
         CuKey::A => piston_window::Key::A,
         CuKey::D => piston_window::Key::D,
     };
-    let mut output = s.input.clone().unwrap();
+    let input = s.input.to_owned().unwrap();
+    let mut output = Game::new_constructed(
+        input.get_game_size(),
+        Snake::init_snake(input.get_game_size().0, input.get_game_size().1, 1, key.into()),
+        GameState::Waiting,
+        0.0,
+        input.get_apple_loc()
+    );
     output.handle_keypress(keypress);
     output.update(2.0);
     s.output = Some(output);
@@ -168,8 +213,8 @@ fn then_move_direction(s: &mut State, exp_dir: CuDirection) {
     let output_snake_pos = s.output.to_owned().unwrap().get_snake().get_head_pos();
     match s.output.to_owned().unwrap().get_state() {
         GameState::Moving(dir) => {
-            assert_eq!(exp_dir, dir);
-            assert_ne!(input_snake_pos, output_snake_pos);
+            assert_eq!(exp_dir, dir, "Snake did not move in the expected direction.");
+            assert_ne!(input_snake_pos, output_snake_pos, "Snake position did not change when expected to.");
         }
         _ => assert!(false, "Snake was not moving"),
     }
@@ -196,13 +241,14 @@ fn when_reverse_direction(s: &mut State, org_dir: CuDirection, new_dir: CuDirect
 }
 
 //Apple Spawning
-#[when(expr = "there is no apple on the screen")]
-fn when_no_apple(s: &mut State) {
-    assert!(false);
-}
 #[then(expr = "an apple should be spawned")]
 fn then_spawn_apple(s: &mut State) {
-    assert!(false);
+    let mut output = s.output.to_owned().unwrap();
+    let org_apple_loc = output.get_apple_loc();
+    assert_eq!(GameState::AteApple, output.get_state(), "GameState did not change to AteApple when expected to.");
+    output.update(2.0);
+    let new_apple_loc = output.get_apple_loc();
+    assert_ne!(org_apple_loc, new_apple_loc, "Apple location was expected to change, but it did not.");
 } 
 
 //Points

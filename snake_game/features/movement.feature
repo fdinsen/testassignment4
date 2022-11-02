@@ -22,5 +22,5 @@ Then the snake moves right
 
 Scenario: Cannot move opposite direction of current direction
 Given we have a snake game
-When the snake is moving left and we tap right
-Then the snake moves left
+When the snake is moving up and we tap down
+Then the snake moves up
