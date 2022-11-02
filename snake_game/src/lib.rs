@@ -24,6 +24,7 @@ pub struct Game {
     state: GameState,
     interval: f64,
     apple_loc: (i32, i32),
+    points: i32,
 }
 #[derive(Debug, Clone, PartialEq)]
 pub enum GameState {
@@ -85,16 +86,17 @@ impl Game {
             snake,
             state: GameState::Waiting,
             interval: 0.0,
-
+            points: 0,
         }
     }
-    pub fn new_constructed(game_size: (i32, i32), snake: Snake, state: GameState, interval: f64, apple_loc: (i32, i32)) -> Self {
+    pub fn new_constructed(game_size: (i32, i32), snake: Snake, state: GameState, interval: f64, apple_loc: (i32, i32), points:i32) -> Self {
         Game {
             game_size,
             snake,
             state,
             interval,
             apple_loc,
+            points
         }
     }
     pub fn get_game_size(&self) -> (i32, i32) {
@@ -108,6 +110,9 @@ impl Game {
     }
     pub fn get_apple_loc(&self) -> (i32, i32) {
         self.apple_loc.clone()
+    }
+    pub fn get_points(&self) -> i32 {
+        self.points
     }
 
     pub fn draw(&self, ctx: &Context, g: &mut G2d) {
@@ -132,6 +137,8 @@ impl Game {
                 }
             }
             GameState::AteApple => {
+                self.points += 1;
+                self.snake.grow_snake();
                 self.apple_loc =  Game::generate_random_apple_location(self.game_size, &self.snake.body);
                 self.state = GameState::Moving(self.snake.prev_dir.clone());
             },
@@ -174,7 +181,6 @@ impl Game {
     fn handle_collision(&mut self, col: Collision) {
         match col {
             Collision::Apple => {
-                self.snake.grow_snake();
                 self.state = GameState::AteApple;
             },
             Collision::Snake => self.state = GameState::Dead,

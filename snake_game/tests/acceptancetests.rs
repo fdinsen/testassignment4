@@ -4,7 +4,7 @@ use std::str::FromStr;
 use cucumber::{given, then, when, World, Parameter};
 use snake_game::{Game, Snake, Direction, GameState};
 
-#[derive(World, Debug, Default)]
+#[derive(World, Debug, Default, Clone)]
 pub struct State {
     input: Option<Game>,
     output: Option<Game>,
@@ -102,6 +102,7 @@ fn given_snake(s: &mut State) {
         GameState::Waiting,
         0.0,
         (w-1, h-1) //place it out of the way
+        ,0
     ));
 }
 #[when(expr = "the snake moves to a free spot")]
@@ -113,13 +114,14 @@ fn when_free_spot(s: &mut State) {
         snake,
         GameState::Moving(Direction::Right),
         0.0,
-        input.get_apple_loc()
+        input.get_apple_loc(),
+        0
     );
     output.update(1.0);
     s.output = Some(output);
-}   
-#[when(expr = "the snake moves to a spot with an apple")]
-fn when_eat_apple(s: &mut State) {
+}
+#[when(expr = "an apple has been eaten")]
+fn when_apple_eaten(s: &mut State) {
     let input = s.input.to_owned().unwrap();
     let snake = input.get_snake();
     let (ax, ay) = snake.get_head_pos();
@@ -128,9 +130,19 @@ fn when_eat_apple(s: &mut State) {
         snake,
         GameState::Moving(Direction::Right),
         0.0,
-        (ax+1, ay)
+        (ax+1, ay),
+        0
     );
-    output.update(2.0);
+    output.update(2.0); // eat the apple
+    s.output = Some(output);
+}
+
+#[when(expr = "the snake moves to a spot with an apple")]
+fn when_snake_eats_apple(s: &mut State) {
+    let mut local_state = s.clone();
+    when_apple_eaten(&mut local_state);
+    let mut output = local_state.output.to_owned().unwrap();
+    output.update(2.0); // run the AteApple logic
     s.output = Some(output);
 }
 
@@ -152,12 +164,8 @@ fn then_grow(s: &mut State) {
 //Snake Death
 #[then(expr = "it does not die")]
 fn then_no_die(s: &mut State) {
-    match s.output.to_owned().unwrap().get_state() {
-        GameState::Dead => assert!(false, "Snake died unexpectedly"),
-        _ => {
-            assert!(true, "How the hell did this fail!?");
-        },
-    }
+    let output = s.output.to_owned().unwrap();
+    assert_ne!(GameState::Dead, output.get_state(), "Snake died unexpectedly");
 }
 
 #[when(expr = "the snake moves to a spot that is already occupied by the snake")]
@@ -170,6 +178,7 @@ fn when_hit_self(s: &mut State) {
         input.get_state(),
         0.0,
         input.get_apple_loc() //place it out of the way
+        ,0
     );
     output.update_move_dir(Direction::Up);
     output.update(2.0);
@@ -200,7 +209,8 @@ fn when_key_press(s: &mut State, key: CuKey) {
         Snake::init_snake(input.get_game_size().0, input.get_game_size().1, 1, key.into()),
         GameState::Waiting,
         0.0,
-        input.get_apple_loc()
+        input.get_apple_loc(),
+        0
     );
     output.handle_keypress(keypress);
     output.update(2.0);
@@ -229,7 +239,8 @@ fn when_reverse_direction(s: &mut State, org_dir: CuDirection, new_dir: CuDirect
         snake,
         GameState::Waiting,
         0.0,
-        input.get_apple_loc()
+        input.get_apple_loc(),
+        0
     );
     //Move once to the org_dir
     output.update_move_dir(org_dir.into());
@@ -254,5 +265,9 @@ fn then_spawn_apple(s: &mut State) {
 //Points
 #[then(expr = "the points go up by one")]
 fn then_point(s: &mut State) {
-    assert!(false);   
+    let org_points = s.input.to_owned().unwrap().get_points();
+    let new_points = s.output.to_owned().unwrap().get_points();
+    assert_ne!(org_points, new_points, "Points did not change when expected to.");
+    assert!(new_points > org_points, "Points did not increase when expected to.");
+    assert_eq!(new_points, org_points+1, "Points increased by more than 1.");
 }
