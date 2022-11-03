@@ -17,6 +17,8 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     - name: Build
-      run: snake-game/cargo build --verbose
+      working-directory: snake_game
+      run: cargo build --verbose
     - name: Run tests
-      run: snake-game/cargo test --test acceptancetests --verbose
+      working-directory: snake_game
+      run: cargo test --test acceptancetests --verbose
