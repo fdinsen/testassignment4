@@ -2,7 +2,8 @@ extern crate snake_game;
 use std::str::FromStr;
 
 use cucumber::{given, then, when, World, Parameter};
-use snake_game::{Game, Snake, Direction, GameState};
+use snake_game::{Game, GameState};
+use snake_game::snake::{Snake, Direction};
 
 #[derive(World, Debug, Default, Clone)]
 pub struct State {
@@ -98,7 +99,7 @@ fn given_snake(s: &mut State) {
     let (w, h) = (20,20);
     s.input = Some(Game::new_constructed(
         (w,h),
-        Snake::init_snake((w/2).abs(),(h/2).abs(), 3, Direction::Right, (w,h)),
+        Snake::init_snake(3, Direction::Right, (w,h)),
         GameState::Waiting,
         0.0,
         (w-1, h-1) //place it out of the way
@@ -174,7 +175,7 @@ fn when_hit_self(s: &mut State) {
     let (w,h) = input.get_game_size();
     let mut output = Game::new_constructed(
         (w,h),
-        Snake::init_snake((w/2).abs(),(h/2).abs(), 5, Direction::Right, (w,h)),
+        Snake::init_snake(5, Direction::Right, (w,h)),
         input.get_state(),
         0.0,
         input.get_apple_loc() //place it out of the way
@@ -207,7 +208,7 @@ fn when_key_press(s: &mut State, key: CuKey) {
     let (w, h) = input.get_game_size();
     let mut output = Game::new_constructed(
         input.get_game_size(),
-        Snake::init_snake((w/2).abs(), (h/2).abs(), 1, key.into(), (w,h)),
+        Snake::init_snake(1, key.into(), (w,h)),
         GameState::Waiting,
         0.0,
         input.get_apple_loc(),
@@ -269,7 +270,7 @@ fn when_leave_edge(s: &mut State) {
     let (w, h) = input.get_game_size();
     let mut output = Game::new_constructed(
         input.get_game_size(),
-        Snake::init_snake(0, (h/2).abs(), 1, Direction::Left, (w,h)), //pass 0 as x to make snake to appear on left-most edge
+        Snake::new(0, (h/2).abs(), 1, Direction::Left, (w,h)), //pass 0 as x to make snake to appear on left-most edge
         GameState::Waiting,
         0.0,
         input.get_apple_loc(),
