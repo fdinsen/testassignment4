@@ -129,7 +129,7 @@ impl Game {
                 self.state = GameState::Moving(self.snake.prev_dir.clone());
             }
             GameState::Dead => {
-                
+                todo!("Add death state with restart");
             }
         }
     }
@@ -175,7 +175,7 @@ impl Game {
         if self.state == GameState::Dead{
             draw_text(&ctx, g, glyphs, GAMEOVER_COLOR, (10.0, 10.0), ":C");
         }
-        draw_text(&ctx, g, glyphs, GAMEOVER_COLOR, (1.0, 2.0), &self.points.to_string().clone()); 
+        // draw_text(&ctx, g, glyphs, GAMEOVER_COLOR, (1.0, 2.0), &self.points.to_string().clone()); 
     }
 
     //private functions
@@ -208,12 +208,4 @@ impl Game {
     pub fn get_points(&self) -> i32 {
         self.points
     }
-}
-
-#[cfg(test)]
-mod tests {
-    // use super::*;
-
-    #[test]
-    fn it_works() {}
 }

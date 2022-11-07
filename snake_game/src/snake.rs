@@ -77,7 +77,7 @@ impl Snake {
             x: head_x + x,
             y: head_y + y,
         };
-        if target.x > self.game_size.0 {
+        if target.x >= self.game_size.0 {
             return Block {
                 x: 0,
                 y: head_y + y,
@@ -89,7 +89,7 @@ impl Snake {
                 y: head_y + y,
             }
         }
-        if target.y > self.game_size.1 {
+        if target.y >= self.game_size.1 {
             return Block {
                 x: head_x + x,
                 y: 0,
@@ -98,7 +98,7 @@ impl Snake {
         if target.y < 0 {
             return Block {
                 x: head_x + x,
-                y: self.game_size.0 -1,
+                y: self.game_size.0-1,
             }
         }
         target
