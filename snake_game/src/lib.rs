@@ -8,7 +8,7 @@ use piston_window::{
     clear, types::Color, Button, Context, G2d, Key, PistonWindow, PressEvent, UpdateEvent,
     WindowSettings, Glyphs,
 };
-use rand::Rng;
+use rand::{Rng, rngs::ThreadRng};
 use std::collections::LinkedList;
 
 const APPLE_COLOUR: Color = [0.95, 0.30, 0.1, 1.0];
@@ -143,7 +143,6 @@ impl Game {
         };
         self.update_move_dir(dir);
     }
-
     pub fn update_move_dir(&mut self, dir: Direction) {
         if self.is_opposite(&dir) {
             return;
@@ -156,14 +155,16 @@ impl Game {
     fn generate_random_apple_location(game_size: (i32, i32),snake_body: &LinkedList<Block>,) -> (i32, i32) {
         let mut rng = rand::thread_rng();
 
-        let mut x = rng.gen_range(1..(game_size.0 - 1));
-        let mut y = rng.gen_range(1..(game_size.1 - 1));
+        let (mut x, mut y) = Game::gen_random_location(game_size, &mut rng);
         //Make sure the apple doesn't intersect with the snake body
         while Snake::intersects_body(&snake_body, (x, y)) {
-            x = rng.gen_range(1..(game_size.0 - 1));
-            y = rng.gen_range(1..(game_size.1 - 1));
+            (x, y) = Game::gen_random_location(game_size, &mut rng);
         }
         (x, y)
+    }
+
+    fn gen_random_location(game_size: (i32, i32), rng: &mut ThreadRng) -> (i32, i32) {
+        (rng.gen_range(1..(game_size.0 - 1)), rng.gen_range(1..(game_size.1 - 1)))
     }
 
     //Rendering

@@ -12,33 +12,45 @@ pub struct Block {
     pub y: i32,
 }
 
-#[derive(Debug, Clone,PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum Direction {
     Up,
     Down,
     Left,
     Right,
 }
-#[derive(Debug, Clone,PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum Collision {
-    None, Apple, Snake 
+    None,
+    Apple,
+    Snake,
 }
 
 impl Snake {
     //Construction
-    pub fn new(x: i32, y: i32, size: i32, default_move_dir: Direction, game_size: (i32,i32)) -> Self {
+    pub fn new(
+        x: i32,
+        y: i32,
+        size: i32,
+        default_move_dir: Direction,
+        game_size: (i32, i32),
+    ) -> Self {
         let mut body = LinkedList::new();
         for i in 0..size {
-            body.push_back(Block {x: x-i, y });
+            body.push_back(Block { x: x - i, y });
         }
-        Snake { body, prev_dir: default_move_dir, game_size }
+        Snake {
+            body,
+            prev_dir: default_move_dir,
+            game_size,
+        }
     }
     pub fn init_snake(size: i32, default_move_dir: Direction, game_size: (i32, i32)) -> Snake {
         let x_loc = (game_size.0 / 2).abs();
         let y_loc = (game_size.1 / 2).abs();
         Self::new(x_loc, y_loc, size, default_move_dir, game_size)
     }
-    
+
     //Snake Logic - public
     pub(crate) fn move_snake(&mut self, dir: &Direction) {
         match &dir {
@@ -60,48 +72,16 @@ impl Snake {
         Collision::None
     }
     pub(crate) fn grow_snake(&mut self) {
-        let (x,y) = self.get_tail_pos();
-        self.body.push_back(Block {x,y});
+        let (x, y) = self.get_tail_pos();
+        self.body.push_back(Block { x, y });
     }
 
     //Snake logic - private
-    fn perform_move_snake(&mut self, x: i32, y: i32) {        
-        let target = self.calculate_next_position(x, y);
+    fn perform_move_snake(&mut self, delta_x: i32, delta_y: i32) {
+        let target =
+            Snake::calculate_next_position(self.get_head_pos(), delta_x, delta_y, self.game_size);
         self.body.pop_back();
         self.body.push_front(target);
-    }
-
-    fn calculate_next_position(&self, x: i32, y: i32 ) -> Block {
-        let (head_x, head_y) = self.get_head_pos();
-        let target = Block {
-            x: head_x + x,
-            y: head_y + y,
-        };
-        if target.x >= self.game_size.0 {
-            return Block {
-                x: 0,
-                y: head_y + y,
-            }
-        }
-        if target.x < 0 {
-            return Block {
-                x: self.game_size.0-1,
-                y: head_y + y,
-            }
-        }
-        if target.y >= self.game_size.1 {
-            return Block {
-                x: head_x + x,
-                y: 0,
-            }
-        }
-        if target.y < 0 {
-            return Block {
-                x: head_x + x,
-                y: self.game_size.0-1,
-            }
-        }
-        target
     }
 
     //Getters
@@ -125,6 +105,40 @@ impl Snake {
     }
 
     //Static
+    fn calculate_next_position(current_pos: (i32, i32),delta_x: i32,delta_y: i32,
+                               game_size: (i32, i32),) -> Block {
+        let (head_x, head_y) = current_pos;
+        let target = Block {
+            x: head_x + delta_x,
+            y: head_y + delta_y,
+        };
+        if target.x >= game_size.0 {
+            return Block {
+                x: 0,
+                y: head_y + delta_y,
+            };
+        }
+        if target.x < 0 {
+            return Block {
+                x: game_size.0 - 1,
+                y: head_y + delta_y,
+            };
+        }
+        if target.y >= game_size.1 {
+            return Block {
+                x: head_x + delta_x,
+                y: 0,
+            };
+        }
+        if target.y < 0 {
+            return Block {
+                x: head_x + delta_x,
+                y: game_size.0 - 1,
+            };
+        }
+        target
+    }
+
     pub(crate) fn intersects_body(body: &LinkedList<Block>, other: (i32, i32)) -> bool {
         for body_part in body {
             if *body_part == other {
@@ -151,7 +165,7 @@ impl Direction {
             Self::Up => Direction::Down,
             Self::Down => Direction::Up,
             Self::Left => Direction::Right,
-            Self::Right => Direction::Left
+            Self::Right => Direction::Left,
         }
     }
 }
