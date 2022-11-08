@@ -29,6 +29,8 @@ Snake game has been implemented in Rust. You can play it either by running the s
 ### Code documentation
 Credit to [SLMT](https://github.com/SLMT/rust-snake) for the rendering code which was used as a base for the development of this project!
 
+![Source files](images/code/source-files.png)
+
 #### lib.rs
 Main package of the game library. Provides play_game() function for running the game. 
 
