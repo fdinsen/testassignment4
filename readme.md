@@ -40,7 +40,7 @@ Main package of the game library. Provides play_game() function for running the 
 ##### State
 Rust's power lies in its guarantee of correctness. The language is designed in a way that allows it to catch at compile-time the most common issues that usually lead to crashes. To take full advantage of this, the game is designed around state-machines. 
 
-![GameState code](images/code/game-state.png)
+![GameState code](images/code/game-states.png)
 ![GameState Diagram](images/code/state-diagram.png)
 The game initializes in the state Waiting, where nothing happens until a key is pressed, at which point it transitions to the Moving state. The moving state holds a direction, which is just an enum of either "up, down, left, right."
 If an apple is eaten, the state is set to AteApple, in which the snake grows, and a new apple is spawned. After that the state is transitioned back to moving.
