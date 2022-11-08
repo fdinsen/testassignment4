@@ -42,7 +42,8 @@ Rust's power lies in its guarantee of correctness. The language is designed in a
 
 ![GameState code](images/code/game-states.png)
 ![GameState Diagram](images/code/state-diagram.png)
-The game initializes in the state Waiting, where nothing happens until a key is pressed, at which point it transitions to the Moving state. The moving state holds a direction, which is just an enum of either "up, down, left, right."
+The game initializes in the state Waiting, where nothing happens until a key is pressed, at which point it transitions to the Moving state. The moving state contains a direction, which is just an enum of either "up, down, left, right."
+
 If an apple is eaten, the state is set to AteApple, in which the snake grows, and a new apple is spawned. After that the state is transitioned back to moving.
 If the snake hits itself, the state is set to Dead. At current time the game will close immediately after entering Dead state.
 
