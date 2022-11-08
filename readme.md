@@ -65,7 +65,7 @@ This function generates a new location for the apple. It does so by first genera
 
 Note here at the final line of generate_random_apple_location that if we don't add a semicolon (;) to the end of a line in Rust, we return the value. So "return (x,y);" is the same as "(x,y)".
 
-###### Handle Keypress
+##### Handle Keypress
 ![Handle Keypress](images/code/game-keypress.png)
 The following two functions handle keypresses. First we match on the key that was pressed, to check if it was a WASD key or an arrow. If not, we just return. Then we save the resulting direction in the dir variable, which we pass to update_move_dir().
 
@@ -82,7 +82,7 @@ The snake is made up of a LinkedList of Blocks, which is just an x and y coordin
 The snake is moved with the move_snake method. It performs a match on the direction, and calls the private method perform_move_snake() with the delta-x and y.
 
 ![Snake Movement performing code](images/code/snake-perform-move.png)
-The perfrom move calls the function calculate_next_position() with the current position of the snake head. Moving works by popping the tail-elemtn of the LinkedList and pushing a new block to the target position.
+The perfrom move calls the function calculate_next_position() with the current position of the snake head. Moving works by popping the tail-element of the LinkedList and pushing a new block to the target position.
 
 calculate_next_position() then adds the delta-x and y to the current position, and checks if the position is outside the bounds of the game. If it is, the position is wrapped.
 
@@ -95,5 +95,5 @@ From this function we return a Collision type, which is either a Snake, Apple or
 The intersects_body function loops through the Blocks in the snake body and checks if they overlap with the given position of the head. This function is also used in the generate_random_apple_location function to check if the apple overlaps with the body of the snake. 
 
 ##### Growing the snake
-[!Snake Grow](images/code/snake-grow.png)
+![Snake Grow](images/code/snake-grow.png)
 This function pushes a new Block onto the back of the body-LinkedList, with the same position as the previous tail Block. 
